@@ -15,6 +15,7 @@ O projeto **HapBox** adota uma abordagem inovadora na gestão do tratamento, vis
 
 - *O site:* https://blue260910.github.io/global-site/#/
 - *Simulação:* https://wokwi.com/projects/381937989733909505
+- *Vídeo* link
 
 ## Componentes necessários para a funcionalidade do código
 Para executar este código, você vai precisar dos seguintes componentes:
