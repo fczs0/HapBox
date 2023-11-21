@@ -20,7 +20,7 @@ O projeto **HapBox** adota uma abordagem inovadora na gestão do tratamento, vis
 ## Componentes necessários para a funcionalidade do código
 Para executar este código, você vai precisar dos seguintes componentes:
 
-- Acesso ao banco de dados da HapBox
+- Acesso ao banco de dados da HapBox para definir horários em que os medicamentos serão dispensados, meicamentos, as dosagens e as informações do usuário.
 - 1 Dispositivo HapBox (Estrutura).
 - 1 Placa de desenvolvimento ESP32 para funções IoT do dispositivo.
 - 6 Aparlehos servo motor para liberar os meddicamentos.
