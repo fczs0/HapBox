@@ -13,6 +13,7 @@ Este projeto consiste em um código desenvolvido para o **HapBox**. O objetivo �
 ## Projeto
 O projeto **HapBox** adota uma abordagem inovadora na gestão do tratamento, visando promover a adesão e a supervisão médica. A implementação abrange o controle de informações provenientes do dispositivo HapBox e sua integração a uma plataforma online, permitindo o registro e a análise de dados sobre o uso dos medicamentos em diversas localizações do país. A avaliação dos dados se baseia na consideração da frequência, da dosagem e do horário dos medicamentos, o que contribui para a melhoria da qualidade de vida dos pacientes.
 **Modelo 3D HapBox:**
+![image](https://github.com/fczs0/HapBox/assets/145861403/a40de0d3-b62e-41df-8a49-1b812a0e12ab)
 
 - *O site:* https://blue260910.github.io/global-site/#/
 - *Simulação:* https://wokwi.com/projects/381937989733909505
