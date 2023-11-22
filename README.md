@@ -36,6 +36,6 @@ Para executar este código, você vai precisar dos seguintes componentes:
 - Inicializa o display TFT que exibe as informações do usuário e do tratamento, usando a biblioteca Adafruit_ILI9341.
 - Compara a hora local com os horários dos medicamentos definidos no banco de dados, e aciona os servos motores correspondentes para abrir as comportas e dispensar os medicamentos, usando uma função auxiliar.
 
-**Exemplo:**
+**Vídeo:**
 
-- *Vídeo* link
+- link
