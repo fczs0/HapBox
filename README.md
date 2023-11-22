@@ -12,12 +12,13 @@ Este projeto consiste em um código desenvolvido para o **HapBox**. O objetivo �
 
 ## Projeto
 O projeto **HapBox** adota uma abordagem inovadora na gestão do tratamento, visando promover a adesão e a supervisão médica. A implementação abrange o controle de informações provenientes do dispositivo HapBox e sua integração a uma plataforma online, permitindo o registro e a análise de dados sobre o uso dos medicamentos em diversas localizações do país. A avaliação dos dados se baseia na consideração da frequência, da dosagem e do horário dos medicamentos, o que contribui para a melhoria da qualidade de vida dos pacientes.
+**Modelo 3D HapBox:**
 
 - *O site:* https://blue260910.github.io/global-site/#/
 - *Simulação:* https://wokwi.com/projects/381937989733909505
-- *Vídeo* link
 
 ## Componentes necessários para a funcionalidade do código
+![image](https://github.com/fczs0/HapBox/assets/145861403/8463d574-ac53-4782-ae69-538bb78c29a9)
 Para executar este código, você vai precisar dos seguintes componentes:
 
 - Acesso ao banco de dados da HapBox para definir horários em que os medicamentos serão dispensados, meicamentos, as dosagens e as informações do usuário.
@@ -33,3 +34,7 @@ Para executar este código, você vai precisar dos seguintes componentes:
 - Inicializa os servos motores que controlam as comportas dos compartimentos de medicamentos, usando a biblioteca ESP32Servo.
 - Inicializa o display TFT que exibe as informações do usuário e do tratamento, usando a biblioteca Adafruit_ILI9341.
 - Compara a hora local com os horários dos medicamentos definidos no banco de dados, e aciona os servos motores correspondentes para abrir as comportas e dispensar os medicamentos, usando uma função auxiliar.
+
+**Exemplo:**
+
+- *Vídeo* link
