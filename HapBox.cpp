@@ -1,72 +1,185 @@
-// Learn about the ESP32 WiFi simulation in
-// https://docs.wokwi.com/guides/esp32-wifi
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
+#include <time.h>
+#include <ESP32Servo.h>
 
-#include <WiFi.h> // Inclui a biblioteca do ESP32 WiFi
-#include <Wire.h> // Inclui a biblioteca para comunicação via I2C
-#include <LiquidCrystal_I2C.h> // Inclui a biblioteca para o LCD via I2C
+String firebaseId = "1";          // ID do banco de dados
+#define MEDICATION1 "Dipirona"    //Medicamento alocado no compartimento 1
+#define MEDICATION2 "Paracetamol" //Medicamento alocado no compartimento 2
+#define MEDICATION3 "Ibuprofeno"  //Medicamento alocado no compartimento 3  
+#define MEDICATION4 "Aspirina"    //Medicamento alocado no compartimento 4
+#define MEDICATION5 "Naproxeno"   //Medicamento alocado no compartimento 5
+#define MEDICATION6 "Varfarina"   //Medicamento alocado no compartimento 6
 
-LiquidCrystal_I2C LCD = LiquidCrystal_I2C(0x27, 16, 2); // Inicializa o LCD com endereço 0x27, 16 colunas e 2 linhas
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
 
-#define NTP_SERVER     "pool.ntp.org" // Define o servidor NTP a ser utilizado
-#define UTC_OFFSET     -3 * 60 * 60 // Define o deslocamento de tempo UTC
-#define UTC_OFFSET_DST 1 // Define o deslocamento de tempo para o horário de verão
+#define NUM_SERVOS 6 
 
-void spinner() {
-  static int8_t counter = 0; // Variável estática para manter o estado do contador
-  const char* glyphs = "\xa1\xa5\xdb"; // Conjunto de caracteres para criar um spinner animado
-  LCD.setCursor(15, 1); // Define a posição no LCD para exibir o spinner
-  LCD.print(glyphs[counter++]); // Imprime o próximo caractere do spinner
-  if (counter == strlen(glyphs)) { // Reinicia o contador quando atinge o final dos caracteres do spinner
-    counter = 0;
-  }
+int anguloFechado = 0;
+int anguloAberto = 180;
+int pinosServo[NUM_SERVOS] = {14, 27, 26, 25, 33, 32};
+
+Servo servos[NUM_SERVOS];
+
+#define BTN_PIN 5
+#define TFT_DC 2
+#define TFT_CS 15
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+
+const String urlBase = "https://hapbox-f9157-default-rtdb.firebaseio.com/";
+String url = urlBase + firebaseId + ".json";
+
+DynamicJsonDocument doc(2048);
+
+
+// Define os parâmetros NTP
+long gmtOffset_sec = -3 * 3600; 
+int daylightOffset_sec = 3600; 
+const char* ntpServer = "pool.ntp.org";
+
+bool horarioCorrespondente[6] = {false, false, false, false, false, false};
+
+void abrirComporta(int indiceServo) {
+  servos[indiceServo].write(anguloAberto);
+  delay(1000);
+  servos[indiceServo].write(anguloFechado);
+  delay(1000);
 }
 
-void printLocalTime() {
-  struct tm timeinfo; // Estrutura para armazenar informações de data e hora
-  if (!getLocalTime(&timeinfo)) { // Obtém a hora local do ESP32
-    LCD.setCursor(0, 1);
-    LCD.println("Conection Error"); // Exibe mensagem de erro se não conseguir obter a hora
-    return;
+DynamicJsonDocument getData() {
+  HTTPClient http;
+  http.useHTTP10(true);
+  http.begin(url);
+  http.GET();
+  String result = http.getString();
+
+  DynamicJsonDocument doc(2048);
+  DeserializationError error = deserializeJson(doc, result);
+
+  if (error) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(error.c_str());
+    return doc;
   }
 
-  LCD.setCursor(8, 0);
-  LCD.println(&timeinfo, "%H:%M:%S"); // Exibe a hora no formato HH:MM:SS
+  String CPF = doc["CPF"].as<String>();
+  String Email = doc["Email"].as<String>();
+  String Name = doc["Name"].as<String>();
+  String Phone = doc["Phone"].as<String>();
 
-  LCD.setCursor(0, 1);
-  LCD.println(&timeinfo, "%d/%m/%Y  %Z"); // Exibe a data no formato DD/MM/AAAA
+  String Horarios = "";
+  for (const auto& horario : doc["Horarios"].as<JsonArray>()) {
+    Horarios += horario.as<String>() + " ";
+  }
+
+  String Medicamentos = "";
+  for (const auto& medicamento : doc["Medicamentos"].as<JsonArray>()) {
+    Medicamentos += medicamento.as<String>() + " ";
+  }
+
+  String Doses = "";
+  for (const auto& dose : doc["Doses"].as<JsonArray>()) {
+    Doses += String(dose.as<int>()) + " ";
+  }
+
+  String QuantidadeComprimidos = "";
+  for (const auto& quantidade : doc["QuantidadeComprimidos"].as<JsonArray>()) {
+    QuantidadeComprimidos += String(quantidade.as<int>()) + " ";
+  }
+
+  http.end();
+  return doc;
+}
+
+void displayData() {
+  tft.setTextColor(ILI9341_WHITE);
+  tft.println("\nLoading data...");
+
+  DynamicJsonDocument data = getData();
+  String jsonData;
+  serializeJson(data, jsonData);
+
+  tft.setTextColor(ILI9341_GREEN);
+  tft.println(jsonData.c_str());
+}
+
+void exibirHoraLocal() {
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return;
+  }
+  char currentTime[50]; 
+  strftime(currentTime, sizeof(currentTime), "%H:%M", &timeinfo);
+
+  JsonArray horarios = doc["Horarios"].as<JsonArray>();
+  JsonArray medicamentos = doc["Medicamentos"].as<JsonArray>();
+
+  for (int i = 0; i < horarios.size(); i++) {
+    if (String(currentTime) == horarios[i].as<String>()) {
+      if (horarioCorrespondente[i]) { 
+        continue;
+      }
+      Serial.println("Horario do remedio");
+      horarioCorrespondente[i] = true; 
+      String medicamento = medicamentos[i].as<String>();
+      if (medicamento == "Dipirona") {
+        abrirComporta(0);
+      } else if (medicamento == "Paracetamol") {
+        abrirComporta(1);
+      } else if (medicamento == "Ibuprofeno") {
+        abrirComporta(2);
+      } else if (medicamento == "Aspirina") {
+        abrirComporta(3);
+      } else if (medicamento == "Naproxeno") {
+        abrirComporta(4);
+      } else if (medicamento == "Varfarina") {
+        abrirComporta(5);
+      }
+    } else if (String(currentTime) > horarios[i].as<String>() && horarioCorrespondente[i]) {
+      horarioCorrespondente[i] = false; 
+    }
+  }
 }
 
 void setup() {
-  Serial.begin(115200); // Inicializa a comunicação serial
+  Serial.begin(9600);
+  Serial.print("Conectando-se ao Wi-Fi");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(300);
+    Serial.print(".");
+  }
+  Serial.println(" Conectado!");
+  Serial.println(" Inicializando servos!");
 
-  LCD.init(); // Inicializa o LCD
-  LCD.backlight(); // Liga o backlight do LCD
-  LCD.setCursor(0, 0);
-  LCD.print("Connecting to ");
-  LCD.setCursor(0, 1);
-  LCD.print("WiFi ");
 
-  WiFi.begin("Wokwi-GUEST", "", 6); // Conecta-se à rede WiFi especificada
-  while (WiFi.status() != WL_CONNECTED) { // Aguarda a conexão com a rede WiFi
-    delay(250);
-    spinner(); // Chama a função para exibir o spinner enquanto aguarda a conexão
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    servos[i].attach(pinosServo[i]);
+    servos[i].write(anguloFechado);
   }
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP()); // Exibe o endereço IP atribuído ao ESP32 após a conexão WiFi ser estabelecida
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
-  LCD.clear();
-  LCD.setCursor(0, 0);
-  LCD.println("Online");
-  LCD.setCursor(0, 1);
-  LCD.println("Updating time...");
+  pinMode(BTN_PIN, INPUT_PULLUP);
 
-  configTime(UTC_OFFSET, UTC_OFFSET_DST, NTP_SERVER); // Configura o ESP32 para obter a hora do servidor NTP
+  tft.begin();
+  tft.setRotation(1);
+
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+
+  doc = getData(); 
+
+  displayData();
 }
 
 void loop() {
-  printLocalTime(); // Chama a função para exibir a hora atual
-  delay(250); // Aguarda um curto período de tempo antes de atualizar novamente
+  exibirHoraLocal(); 
+
+  delay(500);
 }
