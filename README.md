@@ -38,4 +38,4 @@ Para executar este código, você vai precisar dos seguintes componentes:
 
 **Vídeo:**
 
-- link
+- [link](https://youtu.be/2fOdKKisJKM)
